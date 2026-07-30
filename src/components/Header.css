@@ -1,0 +1,39 @@
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 40px;
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.site-header .logo {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.site-header .logo span {
+  color: var(--accent);
+}
+
+.site-header nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-left: 28px;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+
+.site-header nav a:hover,
+.site-header nav a.active {
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .site-header {
+    padding: 14px 20px;
+  }
+}
