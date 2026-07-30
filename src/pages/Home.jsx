@@ -3,9 +3,16 @@ import './Home.css'
 
 const KPIS = [
   { value: '100', label: 'Transports analysés' },
+  { value: '665', label: 'Objets SAP audités' },
   { value: '20%', label: "Taux d'échec d'import", warning: true },
   { value: '6.0', label: 'Délai moyen (jours)' },
-  { value: '58', label: 'Transports à risque élevé', warning: true },
+  { value: '58%', label: 'Transports à risque élevé', warning: true },
+  { value: '1.2K', label: 'Score de risque moyen' },
+]
+
+const RISK_BREAKDOWN = [
+  { label: 'Risque élevé', pct: 58, color: 'var(--accent-2)' },
+  { label: 'Risque faible / moyen', pct: 42, color: 'var(--accent)' },
 ]
 
 const PHASES = [
@@ -64,6 +71,10 @@ const TABLES = [
   },
 ]
 
+function scrollToArchitecture() {
+  document.getElementById('architecture')?.scrollIntoView({ behavior: 'smooth' })
+}
+
 function Home() {
   return (
     <>
@@ -77,9 +88,9 @@ function Home() {
         <Link to="/dashboard" className="btn">
           Voir le Dashboard
         </Link>
-        <a href="#architecture" className="btn secondary">
+        <button type="button" className="btn secondary" onClick={scrollToArchitecture}>
           Découvrir le projet
-        </a>
+        </button>
       </section>
 
       <section>
@@ -90,6 +101,20 @@ function Home() {
             <div className={`kpi-card${kpi.warning ? ' warning' : ''}`} key={kpi.label}>
               <div className="value">{kpi.value}</div>
               <div className="label">{kpi.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="risk-breakdown">
+          {RISK_BREAKDOWN.map((r) => (
+            <div className="risk-row" key={r.label}>
+              <div className="risk-row-label">
+                <span>{r.label}</span>
+                <span>{r.pct}%</span>
+              </div>
+              <div className="risk-bar-track">
+                <div className="risk-bar-fill" style={{ width: `${r.pct}%`, background: r.color }} />
+              </div>
             </div>
           ))}
         </div>
