@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildTransportDocument, buildMonthlyKpiDocuments } from '../src/lib/documents.js'
+import { buildTransportDocument, buildMonthlyKpiDocuments, buildGlobalSummaryDocument } from '../src/lib/documents.js'
 
 test('buildTransportDocument includes key transport fields and its objects', () => {
   const transport = {
@@ -43,4 +43,17 @@ test('buildMonthlyKpiDocuments aggregates transports by creation month', () => {
 test('buildMonthlyKpiDocuments skips rows with no creation date', () => {
   const docs = buildMonthlyKpiDocuments([{ CREATION_DATE: '', STATUS: 'SUCCESS', DELAY: '1', RISK_LEVEL: 'LOW' }])
   assert.equal(docs.length, 0)
+})
+
+test('buildGlobalSummaryDocument aggregates across all transports, all months', () => {
+  const transports = [
+    { CREATION_DATE: '20260701', STATUS: 'SUCCESS', DELAY: '2', RISK_LEVEL: 'LOW' },
+    { CREATION_DATE: '20260715', STATUS: 'FAILED', DELAY: '10', RISK_LEVEL: 'HIGH' },
+    { CREATION_DATE: '20260801', STATUS: 'FAILED', DELAY: '4', RISK_LEVEL: 'MEDIUM' },
+  ]
+  const doc = buildGlobalSummaryDocument(transports)
+  assert.equal(doc.id, 'kpi-global')
+  assert.match(doc.text, /Nombre total de transports : 3/)
+  assert.match(doc.text, /Transports en échec \(FAILED\) au total : 2/)
+  assert.match(doc.text, /Nombre de mois distincts couverts : 2/)
 })

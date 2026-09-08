@@ -2,7 +2,7 @@ import 'dotenv/config'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { parseCsv } from './lib/csv.js'
-import { buildTransportDocument, buildMonthlyKpiDocuments } from './lib/documents.js'
+import { buildTransportDocument, buildMonthlyKpiDocuments, buildGlobalSummaryDocument } from './lib/documents.js'
 import { embedTexts } from './lib/openaiClient.js'
 import { ensureIndex } from './lib/pineconeClient.js'
 
@@ -65,7 +65,10 @@ async function main() {
     metadata: { month: doc.month },
   }))
 
-  console.log(`Built ${transportDocs.length} transport documents, ${kpiDocs.length} monthly KPI documents`)
+  const globalDoc = buildGlobalSummaryDocument(transports)
+  kpiDocs.push({ id: globalDoc.id, text: globalDoc.text, metadata: { scope: 'global' } })
+
+  console.log(`Built ${transportDocs.length} transport documents, ${kpiDocs.length} monthly/global KPI documents`)
 
   const indexName = process.env.PINECONE_INDEX
   if (!indexName) throw new Error('PINECONE_INDEX is not set')
