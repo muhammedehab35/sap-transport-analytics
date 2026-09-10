@@ -5,6 +5,7 @@ import { parseCsv } from './lib/csv.js'
 import { buildTransportDocument, buildMonthlyKpiDocuments, buildGlobalSummaryDocument } from './lib/documents.js'
 import { embedTexts } from './lib/openaiClient.js'
 import { ensureIndex } from './lib/pineconeClient.js'
+import { METHODOLOGY_NAMESPACE, METHODOLOGY_DOCUMENTS } from './lib/methodologyDocs.js'
 
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data')
 const BATCH_SIZE = 50
@@ -79,6 +80,14 @@ async function main() {
 
   console.log('Upserting monthly KPI documents...')
   await upsertDocuments(index, 'kpi_monthly', kpiDocs)
+
+  const methodologyDocs = METHODOLOGY_DOCUMENTS.map((doc) => ({
+    id: doc.id,
+    text: doc.text,
+    metadata: { topic: doc.topic },
+  }))
+  console.log(`Upserting ${methodologyDocs.length} methodology documents...`)
+  await upsertDocuments(index, METHODOLOGY_NAMESPACE, methodologyDocs)
 
   console.log('Ingestion complete.')
 }

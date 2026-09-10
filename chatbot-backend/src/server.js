@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit'
 import { embedText, answerQuestion } from './lib/openaiClient.js'
 import { getIndex } from './lib/pineconeClient.js'
 import { GLOBAL_SUMMARY_ID, extractTransportIds } from './lib/documents.js'
+import { METHODOLOGY_NAMESPACE } from './lib/methodologyDocs.js'
 
 const app = express()
 app.use(express.json())
@@ -43,9 +44,10 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
 
     const mentionedIds = extractTransportIds(question)
 
-    const [transportResults, kpiResults, globalFetch, mentionedFetch] = await Promise.all([
+    const [transportResults, kpiResults, methodologyResults, globalFetch, mentionedFetch] = await Promise.all([
       index.namespace('transports').query({ vector: queryVector, topK: 5, includeMetadata: true }),
       index.namespace('kpi_monthly').query({ vector: queryVector, topK: 5, includeMetadata: true }),
+      index.namespace(METHODOLOGY_NAMESPACE).query({ vector: queryVector, topK: 3, includeMetadata: true }),
       index.namespace('kpi_monthly').fetch([GLOBAL_SUMMARY_ID]),
       mentionedIds.length > 0
         ? index.namespace('transports').fetch(mentionedIds.map((id) => `transport-${id}`))
@@ -60,6 +62,7 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
       ...mentionedTexts,
       ...transportResults.matches.map((match) => match.metadata?.text),
       ...kpiResults.matches.map((match) => match.metadata?.text),
+      ...methodologyResults.matches.map((match) => match.metadata?.text),
     ]
       .filter(Boolean)
       .join('\n\n')
