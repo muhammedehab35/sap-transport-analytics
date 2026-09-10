@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildTransportDocument, buildMonthlyKpiDocuments, buildGlobalSummaryDocument } from '../src/lib/documents.js'
+import { buildTransportDocument, buildMonthlyKpiDocuments, buildGlobalSummaryDocument, extractTransportIds } from '../src/lib/documents.js'
 
 test('buildTransportDocument includes key transport fields and its objects', () => {
   const transport = {
@@ -56,4 +56,26 @@ test('buildGlobalSummaryDocument aggregates across all transports, all months', 
   assert.match(doc.text, /Nombre total de transports : 3/)
   assert.match(doc.text, /Transports en échec \(FAILED\) au total : 2/)
   assert.match(doc.text, /Nombre de mois distincts couverts : 2/)
+})
+
+test('extractTransportIds finds a transport number in a natural-language question', () => {
+  assert.deepEqual(
+    extractTransportIds('quel est le statut du transport A30K000618'),
+    ['A30K000618'],
+  )
+})
+
+test('extractTransportIds is case-insensitive and finds hyphenated IDs', () => {
+  assert.deepEqual(
+    extractTransportIds('parle moi de sapk-61807ineadfps'),
+    ['SAPK-61807INEADFPS'],
+  )
+})
+
+test('extractTransportIds ignores ordinary words with no digits', () => {
+  assert.deepEqual(extractTransportIds('combien de transports au total'), [])
+})
+
+test('extractTransportIds returns an empty array when nothing matches', () => {
+  assert.deepEqual(extractTransportIds('bonjour'), [])
 })

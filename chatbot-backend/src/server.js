@@ -4,7 +4,7 @@ import cors from 'cors'
 import rateLimit from 'express-rate-limit'
 import { embedText, answerQuestion } from './lib/openaiClient.js'
 import { getIndex } from './lib/pineconeClient.js'
-import { GLOBAL_SUMMARY_ID } from './lib/documents.js'
+import { GLOBAL_SUMMARY_ID, extractTransportIds } from './lib/documents.js'
 
 const app = express()
 app.use(express.json())
@@ -41,16 +41,23 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
     const index = getIndex(indexName)
     const queryVector = await embedText(question)
 
-    const [transportResults, kpiResults, globalFetch] = await Promise.all([
+    const mentionedIds = extractTransportIds(question)
+
+    const [transportResults, kpiResults, globalFetch, mentionedFetch] = await Promise.all([
       index.namespace('transports').query({ vector: queryVector, topK: 5, includeMetadata: true }),
       index.namespace('kpi_monthly').query({ vector: queryVector, topK: 5, includeMetadata: true }),
       index.namespace('kpi_monthly').fetch([GLOBAL_SUMMARY_ID]),
+      mentionedIds.length > 0
+        ? index.namespace('transports').fetch(mentionedIds.map((id) => `transport-${id}`))
+        : Promise.resolve({ records: {} }),
     ])
 
     const globalText = globalFetch.records?.[GLOBAL_SUMMARY_ID]?.metadata?.text
+    const mentionedTexts = Object.values(mentionedFetch.records || {}).map((record) => record.metadata?.text)
 
     const contextText = [
       globalText,
+      ...mentionedTexts,
       ...transportResults.matches.map((match) => match.metadata?.text),
       ...kpiResults.matches.map((match) => match.metadata?.text),
     ]

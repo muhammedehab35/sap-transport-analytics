@@ -19,6 +19,13 @@ test('parseCsv handles Windows line endings', () => {
   assert.deepEqual(parseCsv(csv), [{ A: '1', B: '2' }])
 })
 
+test('parseCsv strips a leading UTF-8 BOM so the first header is not corrupted', () => {
+  const csv = '﻿TR_NUMBER;OWNER\nA30K000618;SAP'
+  const rows = parseCsv(csv)
+  assert.deepEqual(rows[0], { TR_NUMBER: 'A30K000618', OWNER: 'SAP' })
+  assert.equal(rows[0].TR_NUMBER, 'A30K000618')
+})
+
 test('formatSapDate converts YYYYMMDD into YYYY-MM-DD', () => {
   assert.equal(formatSapDate('19951124'), '1995-11-24')
 })

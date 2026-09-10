@@ -61,6 +61,11 @@ export function buildMonthlyKpiDocuments(transports) {
   })
 }
 
+export function extractTransportIds(question) {
+  const tokens = question.toUpperCase().match(/[A-Z0-9-]{6,}/g) || []
+  return tokens.filter((token) => /[0-9]/.test(token) && /[A-Z]/.test(token))
+}
+
 export const GLOBAL_SUMMARY_ID = 'kpi-global'
 
 export function buildGlobalSummaryDocument(transports) {

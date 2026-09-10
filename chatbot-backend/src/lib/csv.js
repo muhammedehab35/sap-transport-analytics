@@ -1,5 +1,6 @@
 export function parseCsv(text) {
-  const lines = text.split(/\r?\n/).filter((line) => line.length > 0)
+  const withoutBom = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text
+  const lines = withoutBom.split(/\r?\n/).filter((line) => line.length > 0)
   if (lines.length === 0) return []
   const headers = lines[0].split(';')
   return lines.slice(1).map((line) => {
